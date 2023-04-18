@@ -1,6 +1,6 @@
 <?php
 include 'connect.php';
-//include "simple_html_dom.php";
+include "simple_html_dom.php";
 function scrapWebsite($url) {	
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_URL, $url);
@@ -11,18 +11,18 @@ function scrapWebsite($url) {
 
 	return $html;
 
-	// $html = new simple_html_dom();
-	// $html->load($response);
-	// return $html;	
+	/*$html = new simple_html_dom();
+	$html->load($html);
+	return $html;*/	
 }
 
-function getPostDetails($html) {
 
-	$doc = new DOMDocument();
-	$doc->loadHTML($html);
-
-	$xpath = new DOMXPath($doc);
-
+	function getPostDetails($html) {
+		$doc = new DOMDocument();
+		$doc->loadHTML($html);
+		$xpath = new DOMXPath($doc);
+		
+	
 	//buycott site
 	$productName = $xpath->query('//div[@id="container_header"]/h2')->item(0)->textContent;
 	if (empty($productName)) {
@@ -59,6 +59,42 @@ function getPostDetails($html) {
 		$descriptionNode = $xpath->query('//h2[1]/following-sibling::span')->item(0);
 		$description = $descriptionNode ? $descriptionNode->textContent : 'None';
     }
+	if (empty($productName)) {
+
+		//upcitemdb site
+        // Extract manufacturer name from the other web page
+        $productName = $xpath->query('//p[@class="detailtitle"]')->item(0)->textContent;
+		//new site
+		if (empty($productName)) {
+
+		}
+
+		// Extract brand name
+		$brandNode = $xpath->query('//td[text()="Brand:"]/following-sibling::td')->item(0);
+		$brand = $brandNode ? $brandNode->textContent : 'None';
+
+		// Extract manufacturer name
+		$manufacturerNode = $xpath->query('//td[text()="Manufacturer"]/following-sibling::td/a')->item(0);
+		$manufacturer = $manufacturerNode ? $manufacturerNode->textContent : 'None';
+
+		// Extract EAN code
+		$eanNode = $xpath->query('//td[text()="EAN-13:"]/following-sibling::td')->item(0);
+		$ean = $eanNode ? $eanNode->textContent : 'None';
+		
+		// Extract country name
+		$countryNode = $xpath->query('//td[text()="Country of Registration:"]/following-sibling::td')->item(0);
+		$country = $countryNode ? $countryNode->textContent : 'None';
+
+		// Extract category name
+		$categoryNode = $xpath->query('N/a')->item(0);
+		$category = $categoryNode ? $categoryNode->textContent : 'None';
+
+		// Extract description
+		$descriptionNode = $xpath->query('N/a')->item(0);
+		$description = $descriptionNode ? $descriptionNode->textContent : 'None';
+
+		
+    }
 	else {
 		// Extract brand name
 		$brandNode = $xpath->query('//td[text()="Brand"]/following-sibling::td/a')->item(0);
@@ -76,6 +112,10 @@ function getPostDetails($html) {
 		$countryNode = $xpath->query('//td[text()="Country"]/following-sibling::td')->item(0);
 		$country = $countryNode ? $countryNode->textContent : 'None';
 
+		// Extract category name
+		$categoryNode = $xpath->query('N/a')->item(0);
+		$category = $categoryNode ? $categoryNode->textContent : 'None';
+
 		// Extract description
 		$descriptionNode = $xpath->query('//td[text()="Description"]/following-sibling::td/div[@id="read_desc"]')->item(0);
 		$description = $descriptionNode ? $descriptionNode->textContent : 'None';
@@ -92,8 +132,7 @@ function getPostDetails($html) {
 	];
 	return $product_information;
 }
-
-function getPostDetails_backup ($html) {
+/*function getPostDetails_backup ($html) {
 	$titles = array();
 	$i = 0 ;
 	foreach($html->find('h2') as $post) {		
@@ -116,4 +155,4 @@ function getPostDetails_backup ($html) {
         $i++;
     }
 	return $titles;	
-}	
+}*/	
