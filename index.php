@@ -1,6 +1,7 @@
 <?php
 	include('function.php');
 	include('connect.php');
+	include('design.php');
 	echo '
 		<br>	
 		<form method="post" name="scrap_form" id="scrap_form" action="">   
