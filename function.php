@@ -1,4 +1,5 @@
 <?php
+include 'design.php';
 include 'connect.php';
 include "simple_html_dom.php";
 if(isset($_POST['barcode'])){
@@ -6,8 +7,37 @@ if(isset($_POST['barcode'])){
 	//echo $barcode;
 	scrapWebsite($barcode);
 }
-
 function scrapWebsite($barcode) {	
+
+	/*if(isset($_POST['submit']) && $_POST['numcode']){
+		$html = scrapWebsite($_POST['numcode']);
+		$postDetail = getPostDetails($html);
+		 echo '<pre>';
+		print_r($postDetail);
+		echo '</pre>';
+		$insert="INSERT INTO product_details (product_name, brand, manufacturer, EAN, country, description) VALUES(?, ?, ?, ?, ?, ?)";
+		$result=mysqli_prepare($con,$insert);
+		if($result){
+		 echo "<p>Entered</p>";
+		// Bind parameters to placeholders
+		mysqli_stmt_bind_param($result, "ssssss", $postDetail['product_name'], $postDetail['brand'], $postDetail['manufacturer'], 
+		 $postDetail['EAN'], $postDetail['country'], $postDetail['description']);
+		echo "<p>Executing</p>";
+		// Execute statement
+		mysqli_stmt_execute($result);
+		 echo "Data Inserted Successfully";
+		// Close statement and connection
+			mysqli_stmt_close($result);
+			mysqli_close($con);
+	
+			
+		header('location:view.php');
+		}else{
+			 die(mysqli_error($con));
+		}
+		}*/
+
+
 	
 	$response = ['is_success'=>false,'message'=>''];
 
@@ -27,13 +57,16 @@ function scrapWebsite($barcode) {
 		$html = curl_exec($ch);
 		curl_close($ch);
 
-		if($site == 'https://www.buycott.com/'){
-			$product_information = forBuycott($html);
-		}else if($site == 'https://go-upc.com/search?q='){
-			$product_information = forgoUPC($html);
-		}else if($site == 'https://www.upcitemdb.com/upc/'){
-			$product_information = forupcItemDb($html);
+		if(!empty($html)){
+			if($site == 'https://www.buycott.com/'){
+				$product_information = forBuycott($html);
+			}else if($site == 'https://go-upc.com/search?q='){
+				$product_information = forgoUPC($html);
+			}else if($site == 'https://www.upcitemdb.com/upc/'){
+				$product_information = forupcItemDb($html);
+			}
 		}
+		
 		
 		if($product_information){
 			// save to database
@@ -48,8 +81,7 @@ function scrapWebsite($barcode) {
 
 	 	}
 
-}
-
+	}
 
 	function forBuycott($html){
 		$doc = new DOMDocument();
@@ -76,6 +108,10 @@ function scrapWebsite($barcode) {
 		$categoryNode = $xpath->query('N/a')->item(0);
 		$category = $categoryNode ? $categoryNode->textContent : 'None';
 
+		// Extract header image
+		$headerImageNode = $xpath->query('//div[@class="centered_image header_image"]/img')->item(0);
+		$headerImage = $headerImageNode ? $headerImageNode->getAttribute("src")  : 'None';
+
 		// Extract description
 		$descriptionNode = $xpath->query('//td[text()="Description"]/following-sibling::td/div[@id="read_desc"]')->item(0);
 		$description = $descriptionNode ? $descriptionNode->textContent : 'None';
@@ -87,6 +123,7 @@ function scrapWebsite($barcode) {
 			'EAN'=>$ean,
 			'country'=>$country,
 			'category'=>$category,
+			'image'=>$headerImage,
 			'description'=> trim($description)
 		];
 		return $product_information;
@@ -125,6 +162,10 @@ function scrapWebsite($barcode) {
 		$categoryNode = $xpath->query('//td[text()="Category"]/following-sibling::td')->item(0);
 		$category = $categoryNode ? $categoryNode->textContent : 'None';
 
+		// Extract header image
+		$headerImageNode = $xpath->query('//figure[@class="product-image non-mobile"]/img')->item(0);
+		$headerImage = $headerImageNode ? $headerImageNode->getAttribute("src") : 'None';
+
 		// Extract description
 		$descriptionNode = $xpath->query('//h2[1]/following-sibling::span')->item(0);
 		$description = $descriptionNode ? $descriptionNode->textContent : 'None';
@@ -135,6 +176,7 @@ function scrapWebsite($barcode) {
 			'EAN'=>$ean,
 			'country'=>$country,
 			'category'=>$category,
+			'image'=>$headerImage,
 			'description'=> trim($description)
 		];
 		return $product_information;
@@ -170,6 +212,11 @@ function scrapWebsite($barcode) {
 		$categoryNode = $xpath->query('N/a')->item(0);
 		$category = $categoryNode ? $categoryNode->textContent : 'None';
 
+		// Extract header image
+		$headerImage = $xpath->query('//img[class="product amzn"]/src')->item(0);
+		$image = $headerImage ? $headerImage->textContent : 'None';
+
+
 		// Extract description
 		$descriptionNode = $xpath->query('N/a')->item(0);
 		$description = $descriptionNode ? $descriptionNode->textContent : 'None';
@@ -180,6 +227,7 @@ function scrapWebsite($barcode) {
 			'EAN'=>$ean,
 			'country'=>$country,
 			'category'=>$category,
+			'image'=>$image,
 			'description'=> trim($description)
 		];
 		return $product_information;
