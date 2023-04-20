@@ -4,38 +4,11 @@ include 'connect.php';
 include "simple_html_dom.php";
 if(isset($_POST['barcode'])){
 	$barcode = $_POST['barcode'];
-	//echo $barcode;
+
 	scrapWebsite($barcode);
 }
-function scrapWebsite($barcode) {	
 
-	/*if(isset($_POST['submit']) && $_POST['numcode']){
-		$html = scrapWebsite($_POST['numcode']);
-		$postDetail = getPostDetails($html);
-		 echo '<pre>';
-		print_r($postDetail);
-		echo '</pre>';
-		$insert="INSERT INTO product_details (product_name, brand, manufacturer, EAN, country, description) VALUES(?, ?, ?, ?, ?, ?)";
-		$result=mysqli_prepare($con,$insert);
-		if($result){
-		 echo "<p>Entered</p>";
-		// Bind parameters to placeholders
-		mysqli_stmt_bind_param($result, "ssssss", $postDetail['product_name'], $postDetail['brand'], $postDetail['manufacturer'], 
-		 $postDetail['EAN'], $postDetail['country'], $postDetail['description']);
-		echo "<p>Executing</p>";
-		// Execute statement
-		mysqli_stmt_execute($result);
-		 echo "Data Inserted Successfully";
-		// Close statement and connection
-			mysqli_stmt_close($result);
-			mysqli_close($con);
-	
-			
-		header('location:view.php');
-		}else{
-			 die(mysqli_error($con));
-		}
-		}*/
+function scrapWebsite($barcode) {	
 
 
 	
@@ -58,6 +31,12 @@ function scrapWebsite($barcode) {
 		curl_close($ch);
 
 		if(!empty($html)){
+			$response["is_success"] = false;
+			$response["message"] = 'No data found';
+			
+			//$result = json_decode($response);
+
+			
 			if($site == 'https://www.buycott.com/'){
 				$product_information = forBuycott($html);
 			}else if($site == 'https://go-upc.com/search?q='){
@@ -68,15 +47,47 @@ function scrapWebsite($barcode) {
 		}
 		
 		
-		if($product_information){
+		if(!empty($product_information['product_name'])){
 			// save to database
 			echo $url;
-			echo '<pre>';
+			echo'<pre>';
 			print_r($product_information);
-			echo '</pre>';
-			//return;
-		}
+			echo'</pre>';
+			$response['is_success'] = true;
+			$response['message'] = 'Product found';
+			
+			//return json_decode($response);
 
+			$con=new mysqli('localhost','root','','scrap');
+
+			if(!$con){
+       	 die(mysqli_error($con));
+						}
+				$insert="INSERT INTO product_details (product_name, brand, manufacturer, EAN, country, image, description) VALUES(?, ?, ?, ?, ?, ?, ?)";
+				$result=mysqli_prepare($con,$insert);
+				if($result){
+				 echo "<p>Entered</p>";
+				// Bind parameters to placeholders
+				mysqli_stmt_bind_param($result, "sssssss", $product_information['product_name'], $product_information['brand'], $product_information['manufacturer'], 
+				$product_information['EAN'], $product_information['country'],$product_information['image'], $product_information['description']);
+				echo "<p>Executing</p>";
+				// Execute statement
+				mysqli_stmt_execute($result);
+				 echo "Data Inserted Successfully";
+				// Close statement and connection
+					mysqli_stmt_close($result);
+					mysqli_close($con);
+			
+					
+				
+				}
+				
+				
+		
+		
+			
+
+		}
 	
 
 	 	}
