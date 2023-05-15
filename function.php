@@ -15,7 +15,7 @@ function scrapWebsite($barcode) {
 	$response = ['is_success'=>false,'message'=>''];
 
 	
-	 $sites = ['https://www.buycott.com/','https://go-upc.com/search?q=','https://www.upcitemdb.com/upc/'];
+	 $sites = ['https://www.buycott.com/','https://go-upc.com/search?q=','https://www.upcitemdb.com/upc/','https://www.barcodelookup.com/','https://upcdatabase.org/search'];
 	
 		
 	foreach($sites as $site){
@@ -33,7 +33,6 @@ function scrapWebsite($barcode) {
 		if(!empty($html)){
 			$response["is_success"] = false;
 			$response["message"] = 'No data found';
-			
 			//$result = json_decode($response);
 
 			
@@ -43,8 +42,12 @@ function scrapWebsite($barcode) {
 				$product_information = forgoUPC($html);
 			}else if($site == 'https://www.upcitemdb.com/upc/'){
 				$product_information = forupcItemDb($html);
-			}
-		}
+			}else if($site == 'https://www.barcodelookup.com/'){
+				$product_information = forbarcodelookup($html);
+			 }else if($site == 'https://upcdatabase.org/search'){
+				$product_information = forupcdatabase($html);
+			 }
+		 }
 		
 		
 		if(!empty($product_information['product_name'])){
@@ -55,7 +58,7 @@ function scrapWebsite($barcode) {
 			echo'</pre>';
 			$response['is_success'] = true;
 			$response['message'] = 'Product found';
-			
+			return;
 			//return json_decode($response);
 
 			$con=new mysqli('localhost','root','','scrap');
@@ -121,7 +124,7 @@ function scrapWebsite($barcode) {
 
 		// Extract header image
 		$headerImageNode = $xpath->query('//div[@class="centered_image header_image"]/img')->item(0);
-		$headerImage = $headerImageNode ? $headerImageNode->getAttribute("src")  : 'None';
+		$headerImage = $headerImageNode ? $headerImageNode("src")  : 'None';
 
 		// Extract description
 		$descriptionNode = $xpath->query('//td[text()="Description"]/following-sibling::td/div[@id="read_desc"]')->item(0);
@@ -175,7 +178,7 @@ function scrapWebsite($barcode) {
 
 		// Extract header image
 		$headerImageNode = $xpath->query('//figure[@class="product-image non-mobile"]/img')->item(0);
-		$headerImage = $headerImageNode ? $headerImageNode->getAttribute("src") : 'None';
+		$headerImage = $headerImageNode ? $headerImageNode("src") : 'None';
 
 		// Extract description
 		$descriptionNode = $xpath->query('//h2[1]/following-sibling::span')->item(0);
@@ -243,31 +246,136 @@ function scrapWebsite($barcode) {
 		];
 		return $product_information;
 	}
+	function forbarcodelookup($html){
+		$doc = new DOMDocument();
+		$doc->loadHTML($html);
+		$xpath = new DOMXPath($doc);
 
-function insertToDatabase(){
+		//upc site
+        // Extract manufacturer name from the other web page
+        $productName = $xpath->query('//div[@class="col-50 product-details"]/h4')->item(0)->textContent;
+		//new site
+		if (empty($productName)) {
 
-}
-/*function getPostDetails_backup ($html) {
-	$titles = array();
-	$i = 0 ;
-	foreach($html->find('h2') as $post) {		
-		$titles[$i]['Porduct_Name'] = $post->plaintext;  			
-		$i++;
+		}
+
+		// Extract brand name
+		$brandNode = $xpath->query('N/a')->item(0);
+		$brand = $brandNode ? $brandNode->textContent : 'None';
+
+		// Extract manufacturer name
+		$manufacturerNode = $xpath->query('//div[tclass="Manufacturer: "]/span')->item(0);
+		$manufacturer = $manufacturerNode ? $manufacturerNode->textContent : 'None';
+
+		// Extract EAN code
+		$eanNode = $xpath->query('//h1[text()="EAN"]')->item(0);
+		$ean = $eanNode ? $eanNode->textContent : 'None';
+		
+		// Extract country name
+		$countryNode = $xpath->query('n/a')->item(0);
+		$country = $countryNode ? $countryNode->textContent : 'None';
+
+		// Extract Category name
+		$categoryNode = $xpath->query('//div[@class="Category: "]/span')->item(0);
+		$category = $categoryNode ? $categoryNode->textContent : 'None';
+
+		// Extract header image
+		$headerImageNode = $xpath->query('//div[@class="largeProductImage"]/img')->item(0);
+		$headerImage = $headerImageNode ? $headerImageNode("src") : 'None';
+
+		// Extract description
+		$descriptionNode = $xpath->query('//div[@class="Descripton: &nbsp; "]/span')->item(0);
+		$description = $descriptionNode ? $descriptionNode->textContent : 'None';
+	
+		$product_information = [
+			'product_name' => $productName,
+			'brand'=>$brand,
+			'manufacturer'=>$manufacturer,
+			'EAN'=>$ean,
+			'country'=>$country,
+			'category'=>$category,
+			'image'=>$headerImage,
+			'description'=> trim($description)
+		];
+		return $product_information;
 	}
-	$i = 0 ;
-	foreach($html->find('div[class=centered_image header_image] img') as $img) {		
-		$titles[$i]['Image'] = $img->src;  			
-		$i++;
+	function forupcdatabase($html){
+		$doc = new DOMDocument();
+		$doc->loadHTML($html);
+		$xpath = new DOMXPath($doc);
+
+		//upc site
+        // Extract manufacturer name from the other web page
+        $productName = $xpath->query('//h3[@class="lead"]/h3')->item(0)->textContent;
+		//new site
+		if (empty($productName)) {
+
+		}
+
+		// Extract brand name
+		$brandNode = $xpath->query('//td[text()="Brand"]/following-sibling::td')->item(0);
+		$brand = $brandNode ? $brandNode->textContent : 'None';
+
+		// Extract manufacturer name
+		$manufacturerNode = $xpath->query('//td[text()="Manufacturer"]/following-sibling::td')->item(0);
+		$manufacturer = $manufacturerNode ? $manufacturerNode->textContent : 'None';
+
+		// Extract EAN code
+		$eanNode = $xpath->query('n/a')->item(0);
+		$ean = $eanNode ? $eanNode->textContent : 'None';
+		
+		// Extract country name
+		$countryNode = $xpath->query('//td[text()="Countries"]/following-sibling::td')->item(0);
+		$country = $countryNode ? $countryNode->textContent : 'None';
+
+		// Extract Category name
+		$categoryNode = $xpath->query('//td[text()="Category"]/following-sibling::td')->item(0);
+		$category = $categoryNode ? $categoryNode->textContent : 'None';
+
+		// Extract header image
+		$headerImageNode = $xpath->query('//div[@id="upc_img"]/img')->item(0);
+		$headerImage = $headerImageNode ? $headerImageNode: 'None';
+
+		// Extract description
+		$descriptionNode = $xpath->query('//td[text()="Description"]/following-sibling::td"]/span')->item(0);
+		$description = $descriptionNode ? $descriptionNode->textContent : 'None';
+	
+		$product_information = [
+			'product_name' => $productName,
+			'brand'=>$brand,
+			'manufacturer'=>$manufacturer,
+			'EAN'=>$ean,
+			'country'=>$country,
+			'category'=>$category,
+			'image'=>$headerImage,
+			'description'=> trim($description)
+		];
+		return $product_information;
 	}
-    $i = 0 ;
-    foreach($html->find('table[class=table product_info_table]td a') as $post){
-        $titles[$i]['Category'] = $post->plaintext; 
-        $i++;
-    }
-    $i = 0 ;
-    foreach($html->find('table[class=table product_info_table]td a') as $post){
-        $titles[$i]['Manufacturer'] = $post->plaintext; 
-        $i++;
-    }
-	return $titles;	
-}*/	
+// function insertToDatabase(){
+
+// }
+// function getPostDetails_backup ($html) {
+// 	$titles = array();
+// 	$i = 0 ;
+// 	foreach($html->find('h2') as $post) {		
+// 		$titles[$i]['Porduct_Name'] = $post->plaintext;  			
+// 		$i++;
+// 	}
+// 	$i = 0 ;
+// 	foreach($html->find('div[class=centered_image header_image] img') as $img) {		
+// 		$titles[$i]['Image'] = $img->src;  			
+// 		$i++;
+// 	}
+//     $i = 0 ;
+//     foreach($html->find('table[class=table product_info_table]td a') as $post){
+//         $titles[$i]['Category'] = $post->plaintext; 
+//         $i++;
+//     }
+//     $i = 0 ;
+//     foreach($html->find('table[class=table product_info_table]td a') as $post){
+//         $titles[$i]['Manufacturer'] = $post->plaintext; 
+//         $i++;
+//     }
+// 	return $titles;	
+// }
