@@ -124,7 +124,7 @@ function scrapWebsite($barcode) {
 
 		// Extract header image
 		$headerImageNode = $xpath->query('//div[@class="centered_image header_image"]/img')->item(0);
-		$headerImage = $headerImageNode ? $headerImageNode("src")  : 'None';
+		$headerImage = $headerImageNode ? $headerImageNode->getAttribute("src")  : 'None';
 
 		// Extract description
 		$descriptionNode = $xpath->query('//td[text()="Description"]/following-sibling::td/div[@id="read_desc"]')->item(0);
@@ -178,7 +178,7 @@ function scrapWebsite($barcode) {
 
 		// Extract header image
 		$headerImageNode = $xpath->query('//figure[@class="product-image non-mobile"]/img')->item(0);
-		$headerImage = $headerImageNode ? $headerImageNode("src") : 'None';
+		$headerImage = $headerImageNode ? $headerImageNode->getAttribute("src") : 'None';
 
 		// Extract description
 		$descriptionNode = $xpath->query('//h2[1]/following-sibling::span')->item(0);
@@ -281,7 +281,7 @@ function scrapWebsite($barcode) {
 
 		// Extract header image
 		$headerImageNode = $xpath->query('//div[@class="largeProductImage"]/img')->item(0);
-		$headerImage = $headerImageNode ? $headerImageNode("src") : 'None';
+		$headerImage = $headerImageNode ? $headerImageNode->getAttribute("src") : 'None';
 
 		// Extract description
 		$descriptionNode = $xpath->query('//div[@class="Descripton: &nbsp; "]/span')->item(0);
