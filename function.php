@@ -41,7 +41,7 @@ function scrapWebsite($barcode) {
 			}else if($site == 'https://go-upc.com/search?q='){
 				$product_information = forgoUPC($html);
 			}else if($site == 'https://www.upcitemdb.com/upc/'){
-				$product_information = forupcItemDb($html);
+			  $product_information = forupcItemDb($html);
 			}else if($site == 'https://www.barcodelookup.com/'){
 				$product_information = forbarcodelookup($html);
 			 }else if($site == 'https://upcdatabase.org/search'){
@@ -58,7 +58,7 @@ function scrapWebsite($barcode) {
 			echo'</pre>';
 			$response['is_success'] = true;
 			$response['message'] = 'Product found';
-			return;
+			//return;
 			//return json_decode($response);
 
 			$con=new mysqli('localhost','root','','scrap');
@@ -81,11 +81,9 @@ function scrapWebsite($barcode) {
 					mysqli_stmt_close($result);
 					mysqli_close($con);
 			
-					
-				
 				}
 				
-				
+				break;
 		
 		
 			
@@ -147,7 +145,6 @@ function scrapWebsite($barcode) {
 		$doc = new DOMDocument();
 		$doc->loadHTML($html);
 		$xpath = new DOMXPath($doc);
-
 		//upc site
         // Extract manufacturer name from the other web page
         $productName = $xpath->query('//h1[@class="product-name"]')->item(0)->textContent;
@@ -197,55 +194,55 @@ function scrapWebsite($barcode) {
 	}
 	function forupcItemDb($html){
 
-		$doc = new DOMDocument();
-		$doc->loadHTML($html);
-		$xpath = new DOMXPath($doc);
-		$productName = $xpath->query('//p[@class="detailtitle"]')->item(0)->textContent;
-		//new site
-		if (empty($productName)) {
+     $doc = new DOMDocument();
+     $doc->loadHTML($html);
+     $xpath = new DOMXPath($doc);
+     $productName = $xpath->query('//p[@class="detailtitle"]')->item(0)->textContent;
+     //new site
+     if (empty($productName)) {
 
-		}
+     }
 
-		// Extract brand name
-		$brandNode = $xpath->query('//td[text()="Brand:"]/following-sibling::td')->item(0);
-		$brand = $brandNode ? $brandNode->textContent : 'None';
+     // Extract brand name
+     $brandNode = $xpath->query('//td[text()="Brand:"]/following-sibling::td')->item(0);
+     $brand = $brandNode ? $brandNode->textContent : 'None';
 
-		// Extract manufacturer name
-		$manufacturerNode = $xpath->query('//td[text()="Manufacturer"]/following-sibling::td/a')->item(0);
-		$manufacturer = $manufacturerNode ? $manufacturerNode->textContent : 'None';
+     // Extract manufacturer name
+     $manufacturerNode = $xpath->query('//td[text()="Manufacturer"]/following-sibling::td/a')->item(0);
+     $manufacturer = $manufacturerNode ? $manufacturerNode->textContent : 'None';
 
-		// Extract EAN code
-		$eanNode = $xpath->query('//td[text()="EAN-13:"]/following-sibling::td')->item(0);
-		$ean = $eanNode ? $eanNode->textContent : 'None';
-		
-		// Extract country name
-		$countryNode = $xpath->query('//td[text()="Country of Registration:"]/following-sibling::td')->item(0);
-		$country = $countryNode ? $countryNode->textContent : 'None';
+     // Extract EAN code
+     $eanNode = $xpath->query('//td[text()="EAN-13:"]/following-sibling::td')->item(0);
+     $ean = $eanNode ? $eanNode->textContent : 'None';
+        
+     // Extract country name
+     $countryNode = $xpath->query('//td[text()="Country of Registration:"]/following-sibling::td')->item(0);
+     $country = $countryNode ? $countryNode->textContent : 'None';
 
-		// Extract category name
-		$categoryNode = $xpath->query('N/a')->item(0);
-		$category = $categoryNode ? $categoryNode->textContent : 'None';
+     // Extract category name
+     $categoryNode = $xpath->query('N/a')->item(0);
+     $category = $categoryNode ? $categoryNode->textContent : 'None';
 
-		// Extract header image
-		$headerImage = $xpath->query('//img[class="product amzn"]/src')->item(0);
-		$image = $headerImage ? $headerImage->textContent : 'None';
+     // Extract header image
+     $headerImage = $xpath->query('//img[class="product amzn"]/src')->item(0);
+     $image = $headerImage ? $headerImage->textContent : 'None';
 
+     // Extract description
+     $descriptionNode = $xpath->query('N/a')->item(0);
+     $description = $descriptionNode ? $descriptionNode->textContent : 'None';
+     $product_information = [
+         'product_name' => $productName,
+         'brand'=>$brand,
+         'manufacturer'=>$manufacturer,
+         'EAN'=>$ean,
+         'country'=>$country,
+         'category'=>$category,
+         'image'=>$image,
+         'description'=> trim($description)
+     ];
+     return $product_information;
+    }
 
-		// Extract description
-		$descriptionNode = $xpath->query('N/a')->item(0);
-		$description = $descriptionNode ? $descriptionNode->textContent : 'None';
-		$product_information = [
-			'product_name' => $productName,
-			'brand'=>$brand,
-			'manufacturer'=>$manufacturer,
-			'EAN'=>$ean,
-			'country'=>$country,
-			'category'=>$category,
-			'image'=>$image,
-			'description'=> trim($description)
-		];
-		return $product_information;
-	}
 	function forbarcodelookup($html){
 		$doc = new DOMDocument();
 		$doc->loadHTML($html);
@@ -337,8 +334,9 @@ function scrapWebsite($barcode) {
 		$headerImage = $headerImageNode ? $headerImageNode: 'None';
 
 		// Extract description
-		$descriptionNode = $xpath->query('//td[text()="Description"]/following-sibling::td"]/span')->item(0);
+		$descriptionNode = $xpath->query('//td[text()="Description"]/following-sibling::td/span')->item(0);
 		$description = $descriptionNode ? $descriptionNode->textContent : 'None';
+		
 	
 		$product_information = [
 			'product_name' => $productName,
@@ -352,30 +350,3 @@ function scrapWebsite($barcode) {
 		];
 		return $product_information;
 	}
-// function insertToDatabase(){
-
-// }
-// function getPostDetails_backup ($html) {
-// 	$titles = array();
-// 	$i = 0 ;
-// 	foreach($html->find('h2') as $post) {		
-// 		$titles[$i]['Porduct_Name'] = $post->plaintext;  			
-// 		$i++;
-// 	}
-// 	$i = 0 ;
-// 	foreach($html->find('div[class=centered_image header_image] img') as $img) {		
-// 		$titles[$i]['Image'] = $img->src;  			
-// 		$i++;
-// 	}
-//     $i = 0 ;
-//     foreach($html->find('table[class=table product_info_table]td a') as $post){
-//         $titles[$i]['Category'] = $post->plaintext; 
-//         $i++;
-//     }
-//     $i = 0 ;
-//     foreach($html->find('table[class=table product_info_table]td a') as $post){
-//         $titles[$i]['Manufacturer'] = $post->plaintext; 
-//         $i++;
-//     }
-// 	return $titles;	
-// }
